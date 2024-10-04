@@ -16,7 +16,7 @@ sam deploy --guided --profile [YOUR PROFILE NAME]
 ## Lambda 関数のログを fetch, tail, filter する
 
 ```shell
-sam logs -n RemixFunction --stack-name [ビルド時に命名した名前] --tail
+sam logs -n RemixFunction --stack-name [ビルド時に命名した名前] --tail --profile [YOUR PROFILE NAME]
 ```
 
 👉 [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html)
@@ -24,7 +24,7 @@ sam logs -n RemixFunction --stack-name [ビルド時に命名した名前] --tai
 ## アプリケーションの削除
 
 ```shell
-aws cloudformation delete-stack --stack-name [ビルド時に命名した名前]
+aws cloudformation delete-stack --stack-name [ビルド時に命名した名前] --profile [YOUR PROFILE NAME]
 ```
 
 ---
