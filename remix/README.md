@@ -16,6 +16,23 @@ npm install
 npm run dev
 ```
 
+## URL 一覧
+
+### 認証関連
+
+- `/login` ログインページ
+- `/signup` 新規ユーザー登録ページ
+- `/logout` ログアウト処理
+- `/forgot-password` パスワードリセットページ
+
+### Todo 管理
+
+- `/` ダッシュボード
+
+### ユーザー設定
+
+- `/profile` ユーザープロフィール
+
 ## ER 図
 
 ```mermaid
