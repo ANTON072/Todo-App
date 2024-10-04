@@ -1,0 +1,11 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "todo-app"
+resolve_s3 = true
+s3_prefix = "todo-app"
+region = "ap-northeast-1"
+profile = "my-aws"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = ["RemixFunction=715627328449.dkr.ecr.ap-northeast-1.amazonaws.com/todoapp8df0446d/remixfunctionf6116026repo"]
