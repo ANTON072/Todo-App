@@ -13,6 +13,13 @@ sam build
 sam deploy --guided --profile [YOUR PROFILE NAME]
 ```
 
+2 回目からは以下のコマンド
+
+```shell
+sam build
+sam deploy
+```
+
 ## Lambda 関数のログを fetch, tail, filter する
 
 ```shell
