@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Todo App on AWS Lambda and Remix
+
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  RemixFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: remix/
+      MemorySize: 256
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Events:
+        RootEvent:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: any
+        ProxyEvent:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: any
+    Metadata:
+      DockerTag: v1
+      DockerContext: ./remix
+      Dockerfile: Dockerfile
+
+Outputs:
+  RemixFunctionURL:
+    Description: "API Gateway endpoint URL for Remix"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/"
