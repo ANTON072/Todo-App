@@ -23,6 +23,7 @@ erDiagram
     USER ||--o{ TODO : creates
     USER {
         uuid id PK
+        string cognito_id UK
         string email
         string name
         datetime created_at
@@ -51,4 +52,40 @@ erDiagram
         uuid todo_id FK
         uuid tag_id FK
     }
+```
+
+## 認証フロー
+
+```mermaid
+sequenceDiagram
+    participant Client as ブラウザ
+    participant Server as Remixサーバー
+    participant Cognito as Amazon Cognito
+    participant DB as データベース
+
+    Client->>Server: ページリクエスト
+    Server->>Server: セッションクッキーからアクセストークンを取得
+    alt アクセストークンが存在
+        Server->>Cognito: アクセストークン検証
+        alt トークンが有効
+            Cognito->>Server: 検証成功 + ユーザー情報
+            Server->>DB: ユーザー情報取得 or 更新
+            DB->>Server: ユーザー情報
+            Server->>Client: ページ内容 + ユーザー情報
+        else トークンが無効または期限切れ
+            Cognito->>Server: 検証失敗
+            alt リフレッシュトークンが有効
+                Server->>Cognito: トークンリフレッシュ要求
+                Cognito->>Server: 新しいアクセストークン
+                Server->>Server: セッション更新
+                Server->>DB: ユーザー情報取得 or 更新
+                DB->>Server: ユーザー情報
+                Server->>Client: ページ内容 + ユーザー情報
+            else リフレッシュトークンも無効
+                Server->>Client: ログインページにリダイレクト
+            end
+        end
+    else アクセストークンが存在しない
+        Server->>Client: ログインページにリダイレクト
+    end
 ```
