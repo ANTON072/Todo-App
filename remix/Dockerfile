@@ -1,11 +1,11 @@
 # ビルダーステージ
-FROM public.ecr.aws/docker/library/node:20.18.0-slim as builder
+FROM public.ecr.aws/docker/library/node:20-slim as builder
 WORKDIR /app
 COPY . .
 RUN npm ci && npm run build
 
 # ランナーステージ
-FROM public.ecr.aws/docker/library/node:20.18.0-slim as runner
+FROM public.ecr.aws/docker/library/node:20-slim as runner
 # AWS Lambda Adapterをコンテナにコピー（AWS Lambdaでの実行に必要）
 COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.3 /lambda-adapter /opt/extensions/lambda-adapter
 # 環境変数の設定
