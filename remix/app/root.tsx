@@ -8,6 +8,7 @@ import {
 import type { LinksFunction } from "@remix-run/node";
 
 import "./tailwind.css";
+import { GlobalHeader } from "./components/layout/GlobalHeader";
 
 export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -24,7 +25,7 @@ export const links: LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ja">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -32,7 +33,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <div className="grid grid-rows-[auto_1fr] min-h-screen">
+          <GlobalHeader />
+          {children}
+        </div>
         <ScrollRestoration />
         <Scripts />
       </body>

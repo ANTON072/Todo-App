@@ -1,7 +1,7 @@
 import type { MetaFunction } from "@remix-run/node";
 import { Form } from "@remix-run/react";
 
-import { Input } from "~/components/ui";
+import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
   Card,
@@ -21,12 +21,7 @@ export const meta: MetaFunction = () => {
 export default function Index() {
   return (
     <>
-      <Card className="rounded-none shadow-md">
-        <CardContent className="flex items-center justify-between p-4">
-          <h1 className="text-2xl font-bold text-primary">Todo App</h1>
-        </CardContent>
-      </Card>
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="flex justify-center items-center bg-gray-100">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>サインアップ</CardTitle>
