@@ -5,6 +5,7 @@ export default {
   content: ["./app/**/{**,.client,.server}/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      textDecoration: ["hover"],
       fontFamily: {
         sans: [
           "Inter",
@@ -66,5 +67,21 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    function ({ addUtilities, theme }: unknown) {
+      const newUtilities = {
+        ".link-underline": {
+          color: theme("colors.blue.500", "#3b82f6"),
+          textDecoration: "none",
+          borderBottom: "1px solid transparent",
+          transition: "border-color 0.3s ease",
+        },
+        ".link-underline:hover": {
+          borderColor: theme("colors.blue.500", "#3b82f6"),
+        },
+      };
+      addUtilities(newUtilities, ["hover"]);
+    },
+    require("tailwindcss-animate"),
+  ],
 } satisfies Config;

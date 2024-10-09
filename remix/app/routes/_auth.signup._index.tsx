@@ -1,8 +1,16 @@
 import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Form, json, useActionData } from "@remix-run/react";
+import {
+  Form,
+  json,
+  Link,
+  redirect,
+  useActionData,
+  useNavigation,
+} from "@remix-run/react";
 import {
   SignUpCommand,
   CognitoIdentityProviderClient,
+  UsernameExistsException,
 } from "@aws-sdk/client-cognito-identity-provider";
 
 import { Input } from "~/components/ui/input";
@@ -25,6 +33,12 @@ export const meta: MetaFunction = () => {
 const cognitoClient = new CognitoIdentityProviderClient({
   region: COGNITO_CONFIG.REGION,
 });
+
+interface SignUpActionResponse {
+  success: boolean;
+  error: string | null;
+  exists: boolean;
+}
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
@@ -49,22 +63,31 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       ],
     });
     await cognitoClient.send(command);
-    return json({ success: true, error: null });
+    // セッションにtoastメッセージを保存する
+    const session = await createUserSession(email, "/signup/verify");
+
+    redirect("/signup/verify");
   } catch (error) {
-    console.error("Error during signup:", error);
-    let errorMessage = "サインアップに失敗しました。もう一度お試しください。";
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    }
-    return json({
-      error: errorMessage,
+    const response: SignUpActionResponse = {
       success: false,
+      error: "サインアップに失敗しました。もう一度お試しください。",
+      exists: false,
+    };
+    if (error instanceof Error) {
+      response.error = error.message;
+    }
+    if (error instanceof UsernameExistsException) {
+      response.exists = true;
+    }
+    return json<SignUpActionResponse>(response, {
+      status: 400,
     });
   }
 };
 
-export default function Index() {
+export default function Signup() {
   const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
 
   return (
     <>
@@ -73,7 +96,7 @@ export default function Index() {
           <CardHeader>
             <CardTitle>サインアップ</CardTitle>
             <CardDescription>
-              新しいアカウントを作成してください。
+              サインアップ後、確認コードを入力するページに移動します。メールをご確認ください。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -81,14 +104,15 @@ export default function Index() {
               {actionData?.error && (
                 <Alert variant="destructive">
                   <AlertDescription>{actionData?.error}</AlertDescription>
+                  {actionData?.exists && (
+                    <AlertDescription>
+                      <Link className="link-underline" to="/signup/verify">
+                        認証コードを再発行する
+                      </Link>
+                    </AlertDescription>
+                  )}
                 </Alert>
               )}
-              <div className="space-y-2">
-                <Label htmlFor="name" aria-required>
-                  ユーザー名
-                </Label>
-                <Input id="name" name="name" required />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="email" aria-required>
                   メールアドレス
@@ -96,11 +120,23 @@ export default function Index() {
                 <Input id="email" name="email" type="email" required />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="name" aria-required>
+                  ユーザー名
+                </Label>
+                <Input id="name" name="name" required />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="password">パスワード</Label>
                 <Input id="password" name="password" type="password" required />
               </div>
-              <Button type="submit" className="w-full">
-                アカウント作成
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={navigation.state === "submitting"}
+              >
+                {navigation.state === "submitting"
+                  ? "処理中..."
+                  : "アカウント作成"}
               </Button>
             </Form>
           </CardContent>
