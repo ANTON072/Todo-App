@@ -1,4 +1,11 @@
-import { Form } from "@remix-run/react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import {
+  ActionFunctionArgs,
+  json,
+  LoaderFunctionArgs,
+  redirect,
+} from "@remix-run/node";
+import { ConfirmSignUpCommand } from "@aws-sdk/client-cognito-identity-provider";
 
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -12,8 +19,49 @@ import {
   CardFooter,
 } from "~/components/ui/card";
 import { Alert, AlertDescription } from "~/components/ui/alert";
+import { COGNITO_CONFIG } from "~/config/cognito.server";
+import { getUserId, setFlashMessage } from "~/lib/session.server";
+import { getCognitoClient } from "~/lib/cognito-client.server";
+
+export async function action({ request }: ActionFunctionArgs) {
+  const cognitoClient = getCognitoClient();
+
+  const formData = await request.formData();
+  const verificationCode = formData.get("verificationCode") as string;
+  const userId = formData.get("userId") as string;
+
+  try {
+    const command = new ConfirmSignUpCommand({
+      ClientId: COGNITO_CONFIG.CLIENT_ID,
+      Username: userId,
+      ConfirmationCode: verificationCode,
+    });
+    await cognitoClient.send(command);
+    return setFlashMessage(request, "アカウントを作成しました。", "/login");
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "認証に失敗しました";
+    return json(
+      {
+        error: errorMessage,
+      },
+      { status: 400 },
+    );
+  }
+}
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const userId = await getUserId(request);
+  if (!userId) {
+    return redirect("/signup");
+  }
+  return { userId };
+}
 
 export default function SignupVerify() {
+  const actionData = useActionData<typeof action>();
+  const { userId } = useLoaderData<typeof loader>();
+
   return (
     <div className="flex justify-center items-center bg-gray-100">
       <Card>
@@ -25,6 +73,11 @@ export default function SignupVerify() {
         </CardHeader>
         <CardContent>
           <Form method="post">
+            {actionData?.error && (
+              <Alert variant="destructive">
+                <AlertDescription>{actionData?.error}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="verificationCode">確認コード</Label>
@@ -37,6 +90,7 @@ export default function SignupVerify() {
                   maxLength={6}
                 />
               </div>
+              <input type="hidden" name="userId" value={userId} />
               <Button type="submit" className="w-full">
                 確認
               </Button>

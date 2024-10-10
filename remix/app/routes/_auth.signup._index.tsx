@@ -3,13 +3,11 @@ import {
   Form,
   json,
   Link,
-  redirect,
   useActionData,
   useNavigation,
 } from "@remix-run/react";
 import {
   SignUpCommand,
-  CognitoIdentityProviderClient,
   UsernameExistsException,
 } from "@aws-sdk/client-cognito-identity-provider";
 
@@ -25,22 +23,16 @@ import {
 import { Button } from "~/components/ui/button";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { COGNITO_CONFIG } from "~/config/cognito.server";
+import { createUserSession } from "~/lib/session.server";
+import { getCognitoClient } from "~/lib/cognito-client.server";
 
 export const meta: MetaFunction = () => {
   return [{ title: "Todo App" }];
 };
 
-const cognitoClient = new CognitoIdentityProviderClient({
-  region: COGNITO_CONFIG.REGION,
-});
-
-interface SignUpActionResponse {
-  success: boolean;
-  error: string | null;
-  exists: boolean;
-}
-
 export const action = async ({ request }: ActionFunctionArgs) => {
+  const cognitoClient = getCognitoClient();
+
   const formData = await request.formData();
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
@@ -63,13 +55,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       ],
     });
     await cognitoClient.send(command);
-    // セッションにtoastメッセージを保存する
-    const session = await createUserSession(email, "/signup/verify");
-
-    redirect("/signup/verify");
+    return createUserSession(email, "/signup/verify");
   } catch (error) {
-    const response: SignUpActionResponse = {
-      success: false,
+    const response = {
       error: "サインアップに失敗しました。もう一度お試しください。",
       exists: false,
     };
@@ -79,7 +67,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (error instanceof UsernameExistsException) {
       response.exists = true;
     }
-    return json<SignUpActionResponse>(response, {
+    return json(response, {
       status: 400,
     });
   }
